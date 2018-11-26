@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <title>Vue实例-联系人</title>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <h2 class="text-center">添加联系人</h2>
+    </div>
+
+    <br>
+    <form class="form-horizontal">
+        <div class="form-group">
+            <label for="name" class="control-label col-sm-2 col-sm-offset-2">姓 名：</label>
+            <div class=" col-sm-4">
+                <input type="text" name="name" id="name" v-model="user.name"
+                       class="form-control" placeholder="请输入姓名">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="name" class="control-label col-sm-2 col-sm-offset-2">年 龄：</label>
+            <div class=" col-sm-4">
+                <input type="text" name="age" id="age" class="form-control" v-model="user.age"
+                       placeholder="请输入年龄">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="name" class="control-label col-sm-2 col-sm-offset-2">邮 箱：</label>
+            <div class=" col-sm-4">
+                <input type="text" name="email" id="email" class="form-control" v-model="user.email"
+                       placeholder="请输入邮箱">
+            </div>
+        </div>
+        <div class="form-group  text-center">
+            <button type="button" class="btn btn-primary" style="margin: 8px;" v-on:click="addUser">提交</button>
+            <button type="reset" class="btn btn-danger" style="margin: 8px;">取消</button>
+        </div>
+    </form>
+    <div class="col-sm-8 col-sm-offset-2">
+        <table class="table table-hover table-bordered">
+            <caption class="text-center h3 text-info">用户列表</caption>
+            <thead>
+            <tr>
+                <th class="text-center">ID</th>
+                <th class="text-center">姓名</th>
+                <th class="text-center">年龄</th>
+                <th class="text-center">邮箱</th>
+                <th class="text-center">
+                    <input type="checkbox" v-model="allChecked" v-on:click="selectAll">
+
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(user,index) in users" class="text-center">
+                <td>{{index + 1}}</td>
+                <td>{{user.name}}</td>
+                <td>{{user.age}}</td>
+                <td>{{user.email}}</td>
+                <td>
+                    <input type="checkbox" v-model="user.checked" @click="addSelect(user)">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5" class="text-right">
+                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#delmodal">删除</button>
+                </td>
+            </tr>
+            </tbody>
+
+        </table>
+    </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="delmodal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                    <h4 class="modal-title">删除用户？</h4>
+                </div>
+                <div class="modal-body">
+                    <p>要删除选中的用户吗？</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="delUsers">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="bootstrap/js/jquery.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script src="javascript/vue.js"></script>
+<script src="javascript/axios.min.js"></script>
+<script>
+    //允许vue-devtools检查代码(默认为true),生产环境中要配置为false
+    Vue.config.devtools = true;
+    //组织vue启动时生成生产消息
+    Vue.config.productionTip = false;
+
+    new Vue({
+        el: '.container-fluid',
+        data: {
+            users: [],
+            user: {},
+            allChecked: false,
+            selCount: 0,
+        },
+        methods: {
+            //添加用户
+            addUser() {
+                // this.users.push(this.user);
+                axios.post('adduser', this.user, {
+                    transformRequest: [
+                        function (data) {
+                            let params = '';
+                            for (let index in data) {
+                                params += index + '=' + data[index] + '&';
+                            }
+                            return params;
+                        }
+                    ]
+                }).then(resp => {
+                    console.log(resp.data);
+                    let data  =resp.data;
+                    if(data.msg !== ''){
+                        alert(data.msg);
+                        return;
+                    }
+                    this.getUsers();
+                }).catch(err => {
+                    console.log('请求失败: ' + err.stack);
+                });
+                this.user = {};
+
+            },
+
+            //添加选择
+            addSelect(user) {
+                let checked = !user.checked;
+                if (checked) {
+                    this.selCount++;
+                    if (this.selCount === this.users.length) {
+                        //全部选中按钮改变状态为true
+                        this.allChecked = true;
+                    }
+                } else {
+                    this.allChecked = false;
+                    this.selCount--;
+                }
+            },
+            //全选user
+            selectAll() {
+                let allChecked = !this.allChecked;
+
+                if (allChecked) {
+                    for (let i = 0; i < this.users.length; i++) {
+                        this.users[i].checked = true;
+                    }
+                    this.selCount = this.users.length;
+                } else {
+                    for (let i = 0; i < this.users.length; i++) {
+                        this.users[i].checked = false;
+                    }
+                    this.selCount = 0;
+                }
+
+            },
+            //删除用户
+            delUsers() {
+                let delUsers = [];
+                console.log('del users');
+                if (this.selCount > 0) {
+                    for (let i = this.users.length - 1; i >= 0; i--) {
+                        if (this.users[i].checked === true) {
+                            delUsers.push(this.users[i].id);
+                            this.users.splice(i, 1);
+                            this.selCount--;
+                        }
+                    }
+                    this.allChecked = false;
+                    console.log(delUsers);
+                    let delJson = JSON.stringify(delUsers);
+                    axios.delete('deleteuser' + '/' + delJson).then((data)=>{
+                        this.getUsers();
+                    }).catch(err => {
+                        console.log('请求失败: ' + err.stack);
+                    });;
+                }
+            },
+            //获取用户列表
+            getUsers() {
+                this.users = [];
+                axios.get('userlist').then(resp => {
+                    let users = resp.data;
+                    for (index in users) {
+                        let user = users[index];
+                        console.log(user);
+                        // user.checked = false;
+                        this.users.push(user);
+                    }
+
+                }).catch(err => {
+                    console.log('请求失败: ' + err.stack);
+                });
+            }
+        },
+        mounted() {
+            console.log('组件挂载！');
+            this.getUsers();
+        }
+    })
+</script>
+</body>
+</html>

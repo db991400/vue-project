@@ -1,0 +1,12 @@
+{
+  "name": "vue-node",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "nodemon ./server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "mysql": "^2.16.0"
+  }
+}

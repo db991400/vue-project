@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>利用JSONP模仿百度搜索</title>
+    <script src="js/vue.min.js"></script>
+    <script src="js/vue-resource.min.js"></script>
+    <style>
+        .current {
+            background-color: #ccc;
+        }
+        [v-cloak]{
+            display: none;
+        }
+    </style>
+    <script>
+        window.onload = function () {
+            new Vue({
+                el: '#search',
+                data: {
+                    keyword: '',
+                    myDate: [],
+                    now: -1
+                },
+                methods: {
+                    searchJSONP: function (e) {
+                        //如果是方向键上、下则不发送请求
+                        if (e.keyCode === 38 || e.keyCode === 40) {
+                            return;
+                        }
+                        //https://sp0.baidu.com/5a1Fazu8AA54nxGko9WTAnF6hhy/su?wd=a&json=1&p=3&sid=1423_21097_26350_22158&req=2&csor=1&cb=jQuery1102013590011031227633_1543192003663&_=1543192003668
+                        this.$http.jsonp('https://sp0.baidu.com/5a1Fazu8AA54nxGko9WTAnF6hhy/su', {
+                            params: {
+                                wd: this.keyword
+                            },
+                            jsonp: 'cb'
+                        }).then(resp => {
+
+                            this.myDate = resp.data.s;
+                            console.log(this.myDate);
+                        })
+                    },
+                    changeDown() {
+                        this.now ++;
+                        this.keyword = this.myDate[this.now];
+                        if(this.now === this.myDate.length){
+                            this.now = -1;
+                        }
+                    },
+                    changeUp() {
+                        this.now --;
+                        this.keyword = this.myDate[this.now];
+                        console.log(this.now);
+                        if(this.now === -2){
+                            this.now = this.myDate.length-1;
+                        }
+                    }
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+<div id="search">
+    <input type="text" @keyup="searchJSONP($event)" v-model="keyword"
+           @keydown.down="changeDown" @keydown.up.prevent="changeUp">
+    <ul>
+        <!---->
+        <li v-for="(value,index) in myDate" :class="{current:index === now}" v-cloak>{{value}}</li>
+    </ul>
+    <p v-show="myDate.length === 0">暂无数据...</p>
+</div>
+</body>
+</html>
