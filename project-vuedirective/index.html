@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue directive</title>
+    <script src="vue.min.js"></script>
+    <style>
+        #drag-div div {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+        }
+
+        #drag-div .hello {
+            background: red;
+            top: 0;
+            left: 0;
+        }
+
+        #drag-div .world {
+            background: blue;
+            top: 0;
+            right: 0;
+        }
+    </style>
+
+
+</head>
+<body>
+<div id="drag-div">
+    <div class="hello" v-drag>Hello</div>
+    <div class="world" v-drag>World</div>
+</div>
+<script>
+    Vue.directive('drag', function (el) {
+
+        //获取鼠标位置
+        el.onmousedown = function (e) {
+            var disX = e.clientX - el.offsetLeft;
+            var disY = e.clientY - el.offsetTop;
+            console.log(disX + ":" + disY);
+//包含在onmousedown里面，表示点击后才移动，为防止鼠标移出div，使用document.onmousemove
+//             document.addEventListener('mousemove',function (e) {
+//                 var x = e.clientX - disX;
+//                 var y = e.clientY - disY;
+//                 el.style.left = x + "px";
+//                 el.style.top = y + "px";
+//             })
+            document.onmousemove = function (e) {
+                var x = e.clientX - disX;
+                var y = e.clientY - disY;
+                el.style.left = x + "px";
+                el.style.top = y + "px";
+            }
+            //停止移动
+            document.onmouseup = function () {
+                document.onmousemove = null;
+                document.onmouseup = null;
+            }
+        }
+    });
+    new Vue({
+        el: '#drag-div',
+    });
+</script>
+</body>
+</html>
